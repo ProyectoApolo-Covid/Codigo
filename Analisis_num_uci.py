@@ -33,5 +33,13 @@ num_uci_por_prov_un_mes = dframe.loc[primer_dia:ultimo_dia,('provincia_iso','num
 print(num_uci_por_prov_un_mes)
 num_uci_por_prov_un_mes.plot()
 
+#para el numero de casos
+num_casos= dframe['num_casos']
+
+num_casos_por_dia= num_casos.groupby(by='fecha').sum()
+num_casos_por_semana= num_casos_por_dia.resample('7D').sum()
+#en las provincias
+num_casos_por_provincia = dframe.loc[:,('provincia_iso','num_casos')].groupby('provincia_iso').sum()
+
 
 
