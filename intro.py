@@ -2,19 +2,70 @@ import pandas as pd
 import plotly.express as px  # (version 4.7.0)
 import plotly.graph_objects as go
 import requests
-
+from pathlib import Path
+import numpy as np
 import dash  # (version 1.12.0) pip install dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-from datetime import datetime
+from datetime import datetime, timedelta
 from plotly.graph_objs import *
+
+URL_ISCIII = 'https://cnecovid.isciii.es/covid19/resources/casos_hosp_uci_def_sexo_edad_provres.csv'
+BASE_DIR = Path()
+CACHE_DIR = BASE_DIR / 'cache'
+CACHE_DIR.mkdir(exist_ok=True)
+ORIG_DATE_COL = 'fecha'
+ORIG_CASES_COL = 'num_casos'
+ORIG_HOSP_COL = 'num_hosp'
+ORIG_UCI_COL = 'num_uci'
+ORIG_DEF_COL = 'num_def'
+DATA_COLS = [ORIG_CASES_COL, ORIG_HOSP_COL, ORIG_UCI_COL, ORIG_DEF_COL]
+PROV_ISO_COL = 'provincia_iso'
+
+EVOLUTION_PLOTS_DIR = BASE_DIR / 'evolutions'
+
+def download_iscii_data():
+    fname = URL_ISCIII.split('/')[-1]
+    now = datetime.now()
+    
+    fname = f'{now.year}_{now.month}_{now.day}_{fname}'
+    path = CACHE_DIR / fname
+    
+    if path.exists():
+        return path
+    
+    response = requests.get(URL_ISCIII)
+    
+    if response.status_code != 200:
+        raise RuntimeError(f'Error downloading file: {URL_ISCIII}')
+    
+    fhand = path.open('wb')
+    for chunk in response.iter_content(chunk_size=128):
+        fhand.write(chunk)
+    
+    return path
+
+
+def get_dframe(date_range=None):
+    
+    path = download_iscii_data()
+    
+    dframe = pd.read_csv(path, header=0,
+                             parse_dates=[ORIG_DATE_COL])
+    
+    if date_range is not None:
+        mask = np.logical_and(dframe[ORIG_DATE_COL] >= date_range[0],
+                                 dframe[ORIG_DATE_COL] <= date_range[1])
+        dframe = dframe.loc[mask, :]
+    
+    return dframe
+
 
 app = dash.Dash(__name__,meta_tags = [{"name": "viewport", "content": "width=device-width"}])
 
 #Leemos el csv con los datos (luego cambiare a que descargue automáticamente el más nuevo)
-path = '/home/juanda/Documents/BioInf/Python/py_industriales_2021-main/covid/casos_hosp_uci_def_sexo_edad_provres.csv'
-df = pd.read_csv(path, delimiter=',', parse_dates=['fecha'], index_col='fecha')
+df = get_dframe()
 print(df)
 titulo = {'num_casos':'Número de casos', 'num_hosp':'Número de hospitalizaciones',
 'num_def':'Número de fallecidos','num_uci':'Número de pacientes en la UCI'}
@@ -41,6 +92,16 @@ num_casos_totales = dfinfo['num_casos'].sum() #Casos totales
 num_uci_nuevos = dfinfo['num_uci'].iloc[-1] #Casos nuevos UCI
 num_def_nuevos = dfinfo['num_def'].iloc[-1] #Muertes nuevas
 num_def_totales = dfinfo['num_def'].sum() #Muertes totales
+num_casos_curados = num_casos_totales - info_actual['activos']
+incidencia_acumulada = 0
+
+#Calculo de la incidencia acumulada
+date0 = datetime.now()
+un_dia_menos = timedelta(days=2) #Damos un poco de margen por si el ultimo dia todavia no esta registrado en el csv
+date0 = date0 - un_dia_menos
+catroce_dias = timedelta(days=14)
+contagios_catorce_dias = dfinfo['num_casos'].loc[date0-catroce_dias:date0].sum()
+incidencia_acumulada = contagios_catorce_dias/(47332614/100000)
 
 
 # ------------------------------------------------------------------------------
@@ -277,8 +338,36 @@ app.layout = html.Div(children=[
     html.Div(id='output_container', children=[]),
     html.Br(),
 
-    dcc.Graph(id='mapa_linea', figure={})
-
+	html.Div(children=[
+		html.Div(children = [
+			dcc.Graph(id='mapa_linea', figure={})
+		], 	style={'width':'33%','display':'inline-block'},
+		),
+		html.Div(children=[
+			dcc.Graph(id='tarta', figure={})
+		], 	style={'width':'33%','display':'inline-block'},
+		),
+		html.Div(children=[
+			html.H6(
+				children = "Incidencia acumulada",
+				style = {
+					"textAlign":"center",
+					"color":"gray",
+					"fontSize":40
+				}
+			),
+			html.P(
+				children = incidencia_acumulada,
+				style = {
+					"textAlign":"center",
+					"color":"red",
+					"fontSize":20
+				}
+			)
+		], style={"width":"33%","display":"inline-block"})
+	],
+	className='card_container three columns'
+	),
 ] )
 
 
@@ -286,7 +375,8 @@ app.layout = html.Div(children=[
 # Connect the Plotly graphs with Dash Components
 @app.callback(
     [Output(component_id='output_container', component_property='children'),
-     Output(component_id='mapa_linea', component_property='figure')],
+     Output(component_id='mapa_linea', component_property='figure'),
+	 Output(component_id='tarta', component_property='figure')],
     [Input(component_id='slct_mes', component_property='value'),
     Input(component_id='slct_tipo', component_property="value")]
 )
@@ -296,39 +386,25 @@ def update_graph(slct_mes, slct_tipo):
 
     container = " " #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
+    data_pie = [num_casos_totales,num_casos_curados,info_actual['activos'],num_def_totales] #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
+
     dff = df.copy()
     dff = dff[dff["provincia_iso"] == slct_mes]
     dff = dff.groupby('fecha').sum()
     print(dff)
     titulo_grafica = "{}".format(titulo[slct_tipo])
 
-    layout = Layout(paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)')
-
     # Plotly Express
     fig = px.line(
         dff, y=slct_tipo, title=titulo_grafica
     )
 
-    # Plotly Graph Objects (GO)
-    # fig = go.Figure(
-    #     data=[go.Choropleth(
-    #         locationmode='USA-states',
-    #         locations=dff['state_code'],
-    #         z=dff["Pct of Colonies Impacted"].astype(float),
-    #         colorscale='Reds',
-    #     )]
-    # )
-    #
-    # fig.update_layout(
-    #     title_text="Bees Affected by Mites in the USA",
-    #     title_xanchor="center",
-    #     title_font=dict(size=24),
-    #     title_x=0.5,
-    #     geo=dict(scope='usa'),
-    # )
+    fig2 = go.Figure(
+        data=[go.Pie(labels=['Confirmados','Curados','Activos', 'Fallecidos'], values=data_pie)]
+	)
 
-    return container, fig
+    
+    return container, fig, fig2
 
 
 # ------------------------------------------------------------------------------
