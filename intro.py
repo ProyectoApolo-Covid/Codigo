@@ -14,6 +14,8 @@ app = dash.Dash(__name__)
 path = '/home/juanda/Documents/BioInf/Python/py_industriales_2021-main/covid/casos_hosp_uci_def_sexo_edad_provres.csv'
 df = pd.read_csv(path, delimiter=',', parse_dates=['fecha'], index_col='fecha')
 print(df)
+titulo = {'num_casos':'Número de casos', 'num_hosp':'Número de hospitalizaciones',
+'num_def':'Número de fallecidos','num_uci':'Número de pacientes en la UCI'}
 
 # ------------------------------------------------------------------------------
 # App layout
@@ -21,7 +23,7 @@ app.layout = html.Div([
 
     html.H1("Web Application Dashboards with Dash", style={'text-align': 'center'}),
 #Hay que comprobar que esten todas las provincias y bien puestas
-    dcc.Dropdown(id="slct_year",
+    dcc.Dropdown(id="slct_mes",
                  options=[
                      {"label": "Alicante", "value": 'A'},
                      {"label": "Albacete", "value": 'AB'},
@@ -79,6 +81,17 @@ app.layout = html.Div([
                  value='A',
                  style={'width': "40%"}
                  ),
+    
+    dcc.Dropdown(id="slct_tipo",
+                 options=[
+                     {"label": "Número de casos totales", "value": 'num_casos'},
+                     {"label": "Número de casos en UCI", "value": 'num_uci'},
+                     {"label": "Número de fallecidos", "value": 'num_def'},
+                     {"label": "Número de hospitalizados", "value": 'num_hosp'}],
+                 multi=False,
+                 value='num_casos',
+                 style={'width': "40%"}
+                 ),
 
     html.Div(id='output_container', children=[]),
     html.Br(),
@@ -93,22 +106,24 @@ app.layout = html.Div([
 @app.callback(
     [Output(component_id='output_container', component_property='children'),
      Output(component_id='my_bee_map', component_property='figure')],
-    [Input(component_id='slct_year', component_property='value')]
+    [Input(component_id='slct_mes', component_property='value'),
+    Input(component_id='slct_tipo', component_property="value")]
 )
-def update_graph(option_slctd):
-    print(option_slctd)
-    print(type(option_slctd))
+def update_graph(slct_mes, slct_tipo):
+    print(slct_mes)
+    print(type(slct_mes))
 
-    container = "The provincia chosen by user was: {}".format(option_slctd)
+    container = "The provincia chosen by user was: {}".format(slct_mes)
 
     dff = df.copy()
-    dff = dff[dff["provincia_iso"] == option_slctd]
+    dff = dff[dff["provincia_iso"] == slct_mes]
     dff = dff.groupby('fecha').sum()
     print(dff)
+    titulo_grafica = "{}".format(titulo[slct_tipo])
 
     # Plotly Express
     fig = px.line(
-        dff, y='num_casos', title='Holamundo'
+        dff, y=slct_tipo, title=titulo_grafica
     )
 
     # Plotly Graph Objects (GO)
