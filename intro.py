@@ -406,15 +406,23 @@ app.layout = html.Div(children=[
 	html.Div(children=[
 		html.Div(children = [
 			dcc.Graph(id='mapa_linea', figure={})
-		], 	
-		),
-		html.Div(children=[
-			html.H6(
+		], 	style = {'width':'50%','display':'inline-block', 'margin-top':'-100px'}
+        ),
+        html.Div(children = [
+            html.H5(
+                children = 'Hoy en la provincia seleccionada:',
+                style = {
+					"textAlign":"center",
+					"color":"gray",
+					"fontSize":30
+				}
+            ),
+            html.H6(
 				children = "Incidencia acumulada",
 				style = {
 					"textAlign":"center",
 					"color":"gray",
-					"fontSize":40
+					"fontSize":30
 				}
 			),
 			html.P(id = 'incidencia',
@@ -424,9 +432,76 @@ app.layout = html.Div(children=[
 					"color":"red",
 					"fontSize":20
 				}
-			)
-		], 
-        )
+			),
+            html.H6(
+                children = "Nuevos casos diagnosticados",
+                style = {
+					"textAlign":"center",
+					"color":"gray",
+					"fontSize":30
+				}
+            ),
+            html.P(
+                id = 'nuevos_casos_provincia',
+                children = {},
+                style = {
+					"textAlign":"center",
+					"color":"red",
+					"fontSize":20
+				}
+            ),
+            html.H6(
+                children = "Nuevos casos en UCI",
+                style = {
+					"textAlign":"center",
+					"color":"gray",
+					"fontSize":30
+				}
+            ),
+            html.P(
+                id = 'nuevos_uci_provincia',
+                children = {},
+                style = {
+					"textAlign":"center",
+					"color":"red",
+					"fontSize":20
+				}
+            ),
+            html.H6(
+                children = 'Nuevos fallecidos',
+                style = {
+					"textAlign":"center",
+					"color":"gray",
+					"fontSize":30
+				}
+            ),
+            html.P(
+                id = 'nuevos_fallecidos_provincia',
+                children = {},
+                style = {
+					"textAlign":"center",
+					"color":"red",
+					"fontSize":20
+				}
+            ),
+            html.H6(
+                children = 'Nuevos casos hospitalizados',
+                style = {
+					"textAlign":"center",
+					"color":"gray",
+					"fontSize":30
+				} 
+            ),
+            html.P(
+                id = 'nuevos_hosp_provincia',
+                children = {},
+                style = {
+					"textAlign":"center",
+					"color":"red",
+					"fontSize":20
+				}
+            ), 
+        ], style = {'width':'25%','display':'inline-block'})
 	],
 	className='card_container three columns'
 	),
@@ -439,7 +514,11 @@ app.layout = html.Div(children=[
     [Output(component_id='output_container', component_property='children'),
      Output(component_id='mapa_linea', component_property='figure'),
      Output(component_id='incidencia', component_property='children'),
-     Output(component_id='incidencia_españa', component_property='figure')],
+     Output(component_id='incidencia_españa', component_property='figure'),
+     Output(component_id='nuevos_casos_provincia', component_property='children'),
+     Output(component_id='nuevos_uci_provincia', component_property='children'),
+     Output(component_id='nuevos_fallecidos_provincia', component_property='children'),
+     Output(component_id='nuevos_hosp_provincia', component_property='children'),],
     [Input(component_id='slct_prov', component_property='value'),
     Input(component_id='slct_tipo', component_property="value")]
 )
@@ -453,6 +532,14 @@ def update_graph(slct_prov, slct_tipo):
 
     titulo_grafica = "{}".format(titulo[slct_tipo])
 
+    dff = df.copy()
+    dff = dff[dff['provincia_iso']==slct_prov]
+    dff = dff.groupby('fecha').sum()
+    nuevos_casos = dff['num_casos'].iloc[-1]
+    nuevos_uci = dff['num_uci'].iloc[-1]
+    nuevos_hopsitalizados = dff['num_hosp'].iloc[-1]
+    nuevos_defunciones = dff['num_def'].iloc[-1]
+
     # Plotly Express
     fig = px.line(
         dff, y=slct_tipo, title=titulo_grafica
@@ -465,7 +552,7 @@ def update_graph(slct_prov, slct_tipo):
 	)
 
     
-    return container, fig, incidencia_acumulada, fig2
+    return container, fig, incidencia_acumulada, fig2, nuevos_casos, nuevos_uci, nuevos_hopsitalizados, nuevos_defunciones
 
 
 # ------------------------------------------------------------------------------
