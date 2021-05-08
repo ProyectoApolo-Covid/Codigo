@@ -25,6 +25,59 @@ PROV_ISO_COL = 'provincia_iso'
 
 EVOLUTION_PLOTS_DIR = BASE_DIR / 'evolutions'
 
+poblacion_prov = {'A':1879888,
+'AB':388270,
+'AL':727945,
+'AV':157664,
+'B':5743402,
+'BA':672137,
+'BI':1159543,
+'BU':357650,
+'C':1121815,
+'CA':1244049,
+'CC':391850,
+'CE':84202,
+'CO':781451,
+'CR':495045,
+'CS':585590,
+'CU':196139,
+'GC':1131065,
+'GI':781788,
+'GR':919168,
+'GU':261995,
+'H':524278,
+'HU':222687,
+'J':631381,
+'L':438517,
+'LE':456439,
+'LO':319914,
+'LU':327946,
+'M':6779888,
+'MA':1685920,
+'ML':87076,
+'MU':1511251,
+'NA':661197,
+'O':1018784,
+'OR':306650,
+'P':160321,
+'PM':1171543,
+'PO':945408,
+'S':582905,
+'SA':329245,
+'SE':1950219,
+'SG':153478,
+'SO':88884,
+'SS':727121,
+'T':816772,
+'TE':134176,
+'TF':1044887,
+'TO':703772,
+'V':2591875,
+'VA':520649,
+'VI':1159443,
+'Z':972528,
+'ZA':170588}
+
 def download_iscii_data():
     fname = URL_ISCIII.split('/')[-1]
     now = datetime.now()
@@ -93,15 +146,14 @@ num_uci_nuevos = dfinfo['num_uci'].iloc[-1] #Casos nuevos UCI
 num_def_nuevos = dfinfo['num_def'].iloc[-1] #Muertes nuevas
 num_def_totales = dfinfo['num_def'].sum() #Muertes totales
 num_casos_curados = num_casos_totales - info_actual['activos']
-incidencia_acumulada = 0
 
 #Calculo de la incidencia acumulada
-date0 = datetime.now()
-un_dia_menos = timedelta(days=2) #Damos un poco de margen por si el ultimo dia todavia no esta registrado en el csv
-date0 = date0 - un_dia_menos
-catroce_dias = timedelta(days=14)
-contagios_catorce_dias = dfinfo['num_casos'].loc[date0-catroce_dias:date0].sum()
-incidencia_acumulada = contagios_catorce_dias/(47332614/100000)
+# date0 = datetime.now()
+# un_dia_menos = timedelta(days=2) #Damos un poco de margen por si el ultimo dia todavia no esta registrado en el csv
+# date0 = date0 - un_dia_menos
+# catroce_dias = timedelta(days=14)
+# contagios_catorce_dias = dfinfo['num_casos'].loc[date0-catroce_dias:date0].sum()
+# incidencia_acumulada = contagios_catorce_dias/(47332614/100000)
 
 
 # ------------------------------------------------------------------------------
@@ -265,7 +317,7 @@ app.layout = html.Div(children=[
 		),
 
 #TO-DO Hay que comprobar que esten todas las provincias y bien puestas
-    dcc.Dropdown(id="slct_mes",
+    dcc.Dropdown(id="slct_prov",
                  options=[
                      {"label": "Alicante", "value": 'A'},
                      {"label": "Albacete", "value": 'AB'},
@@ -273,7 +325,7 @@ app.layout = html.Div(children=[
                      {"label": "Ávila", "value": 'AV'},
                      {"label": "Barcelona", "value": 'B'},
                      {"label": "Badajoz", "value": 'BA'},
-                     {"label": "Bilbao", "value": 'BI'},
+                     {"label": "Vizcaya", "value": 'BI'},
                      {"label": "Burgos", "value": 'BU'},
                      {"label": "La Coruña", "value": 'C'},
                      {"label": "Cádiz", "value": 'CA'},
@@ -356,8 +408,8 @@ app.layout = html.Div(children=[
 					"fontSize":40
 				}
 			),
-			html.P(
-				children = incidencia_acumulada,
+			html.P(id = 'incidencia',
+				children = {},
 				style = {
 					"textAlign":"center",
 					"color":"red",
@@ -376,22 +428,28 @@ app.layout = html.Div(children=[
 @app.callback(
     [Output(component_id='output_container', component_property='children'),
      Output(component_id='mapa_linea', component_property='figure'),
-	 Output(component_id='tarta', component_property='figure')],
-    [Input(component_id='slct_mes', component_property='value'),
+	 Output(component_id='tarta', component_property='figure'),
+     Output(component_id='incidencia', component_property='children')],
+    [Input(component_id='slct_prov', component_property='value'),
     Input(component_id='slct_tipo', component_property="value")]
 )
-def update_graph(slct_mes, slct_tipo):
-    print(slct_mes)
-    print(type(slct_mes))
+def update_graph(slct_prov, slct_tipo):
+    print(slct_prov)
+    print(type(slct_prov))
 
     container = " " #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
     data_pie = [num_casos_totales,num_casos_curados,info_actual['activos'],num_def_totales] #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
     dff = df.copy()
-    dff = dff[dff["provincia_iso"] == slct_mes]
+    dff = dff[dff["provincia_iso"] == slct_prov]
     dff = dff.groupby('fecha').sum()
     print(dff)
+    date0 = datetime.now()
+    catorce_dias = timedelta(days=14)
+    contagios_catorce_dias = dff['num_casos'].loc[date0-catorce_dias:date0].sum()
+    incidencia_acumulada = contagios_catorce_dias/(poblacion_prov[slct_prov]/100000)
+
     titulo_grafica = "{}".format(titulo[slct_tipo])
 
     # Plotly Express
@@ -404,7 +462,7 @@ def update_graph(slct_mes, slct_tipo):
 	)
 
     
-    return container, fig, fig2
+    return container, fig, fig2, incidencia_acumulada
 
 
 # ------------------------------------------------------------------------------
