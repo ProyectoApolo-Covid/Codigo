@@ -171,6 +171,10 @@ app.layout = html.Div(children=[
 
     html.H1("Análisis de la situacion actual del Covid-19 en España", style={'text-align': 'center', 'color':'gray'}, ),
 
+    html.Br(),
+
+    dcc.Graph(id='incidencia_españa', figure={}),
+
     html.Div(
 			children = [
 				# (Columna 1): Contagios totales
@@ -402,11 +406,7 @@ app.layout = html.Div(children=[
 	html.Div(children=[
 		html.Div(children = [
 			dcc.Graph(id='mapa_linea', figure={})
-		], 	style={'width':'33%','display':'inline-block'},
-		),
-		html.Div(children=[
-			dcc.Graph(id='tarta', figure={})
-		], 	style={'width':'33%','display':'inline-block'},
+		], 	
 		),
 		html.Div(children=[
 			html.H6(
@@ -425,7 +425,8 @@ app.layout = html.Div(children=[
 					"fontSize":20
 				}
 			)
-		], style={"width":"33%","display":"inline-block"})
+		], 
+        )
 	],
 	className='card_container three columns'
 	),
@@ -437,8 +438,8 @@ app.layout = html.Div(children=[
 @app.callback(
     [Output(component_id='output_container', component_property='children'),
      Output(component_id='mapa_linea', component_property='figure'),
-	 Output(component_id='tarta', component_property='figure'),
-     Output(component_id='incidencia', component_property='children')],
+     Output(component_id='incidencia', component_property='children'),
+     Output(component_id='incidencia_españa', component_property='figure')],
     [Input(component_id='slct_prov', component_property='value'),
     Input(component_id='slct_tipo', component_property="value")]
 )
@@ -447,8 +448,6 @@ def update_graph(slct_prov, slct_tipo):
     print(type(slct_prov))
 
     container = " " #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
-
-    data_pie = [num_casos_totales,num_casos_curados,info_actual['activos'],num_def_totales] #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
     incidencia_acumulada = provincia_incidencia[slct_prov]
 
@@ -466,7 +465,7 @@ def update_graph(slct_prov, slct_tipo):
 	)
 
     
-    return container, fig, fig2, incidencia_acumulada
+    return container, fig, incidencia_acumulada, fig2
 
 
 # ------------------------------------------------------------------------------
