@@ -25,6 +25,10 @@ PROV_ISO_COL = 'provincia_iso'
 
 EVOLUTION_PLOTS_DIR = BASE_DIR / 'evolutions'
 
+provincia_abrev = ['A','AB','AL','AV','B','BA','BI','BU','C','CA','CC','CE','CO','CR','CS','CU','GC','GI','GR','GU','H','HU','J','L','LE','LO','LU','M','MA','ML','MU','NA','O','OR','P','PM','PO','S','SA','SE','SG','SO','SS','T','TE','TF','TO','V','VA','VI','Z','ZA']
+
+provincia_incidencia = {'A':[],'AB':[],'AL':[],'AV':[],'B':[],'BA':[],'BI':[],'BU':[],'C':[],'CA':[],'CC':[],'CE':[],'CO':[],'CR':[],'CS':[],'CU':[],'GC':[],'GI':[],'GR':[],'GU':[],'H':[],'HU':[],'J':[],'L':[],'LE':[],'LO':[],'LU':[],'M':[],'MA':[],'ML':[],'MU':[],'NA':[],'O':[],'OR':[],'P':[],'PM':[],'PO':[],'S':[],'SA':[],'SE':[],'SG':[],'SO':[],'SS':[],'T':[],'TE':[],'TF':[],'TO':[],'V':[],'VA':[],'VI':[],'Z':[],'ZA':[]}
+
 poblacion_prov = {'A':1879888,
 'AB':388270,
 'AL':727945,
@@ -146,6 +150,18 @@ num_uci_nuevos = dfinfo['num_uci'].iloc[-1] #Casos nuevos UCI
 num_def_nuevos = dfinfo['num_def'].iloc[-1] #Muertes nuevas
 num_def_totales = dfinfo['num_def'].sum() #Muertes totales
 num_casos_curados = num_casos_totales - info_actual['activos']
+
+
+
+for provincia in provincia_abrev:
+    dff = df.copy()
+    dff = dff[dff["provincia_iso"] == provincia]
+    dff = dff.groupby('fecha').sum()
+    date0 = datetime.now()
+    catorce_dias = timedelta(days=14)
+    contagios_catorce_dias = dff['num_casos'].loc[date0-catorce_dias:date0].sum()
+    provincia_incidencia[provincia].append(contagios_catorce_dias/(poblacion_prov[provincia]/100000))
+
 
 #Calculo de la incidencia acumulada
 # date0 = datetime.now()
@@ -441,14 +457,7 @@ def update_graph(slct_prov, slct_tipo):
 
     data_pie = [num_casos_totales,num_casos_curados,info_actual['activos'],num_def_totales] #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
-    dff = df.copy()
-    dff = dff[dff["provincia_iso"] == slct_prov]
-    dff = dff.groupby('fecha').sum()
-    print(dff)
-    date0 = datetime.now()
-    catorce_dias = timedelta(days=14)
-    contagios_catorce_dias = dff['num_casos'].loc[date0-catorce_dias:date0].sum()
-    incidencia_acumulada = contagios_catorce_dias/(poblacion_prov[slct_prov]/100000)
+    incidencia_acumulada = provincia_incidencia[slct_prov]
 
     titulo_grafica = "{}".format(titulo[slct_tipo])
 
