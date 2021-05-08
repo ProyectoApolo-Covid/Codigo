@@ -29,6 +29,8 @@ provincia_abrev = ['A','AB','AL','AV','B','BA','BI','BU','C','CA','CC','CE','CO'
 
 provincia_incidencia = {'A':[],'AB':[],'AL':[],'AV':[],'B':[],'BA':[],'BI':[],'BU':[],'C':[],'CA':[],'CC':[],'CE':[],'CO':[],'CR':[],'CS':[],'CU':[],'GC':[],'GI':[],'GR':[],'GU':[],'H':[],'HU':[],'J':[],'L':[],'LE':[],'LO':[],'LU':[],'M':[],'MA':[],'ML':[],'MU':[],'NA':[],'O':[],'OR':[],'P':[],'PM':[],'PO':[],'S':[],'SA':[],'SE':[],'SG':[],'SO':[],'SS':[],'T':[],'TE':[],'TF':[],'TO':[],'V':[],'VA':[],'VI':[],'Z':[],'ZA':[]}
 
+incidencia_vector = []
+
 poblacion_prov = {'A':1879888,
 'AB':388270,
 'AL':727945,
@@ -161,16 +163,7 @@ for provincia in provincia_abrev:
     catorce_dias = timedelta(days=14)
     contagios_catorce_dias = dff['num_casos'].loc[date0-catorce_dias:date0].sum()
     provincia_incidencia[provincia].append(contagios_catorce_dias/(poblacion_prov[provincia]/100000))
-
-
-#Calculo de la incidencia acumulada
-# date0 = datetime.now()
-# un_dia_menos = timedelta(days=2) #Damos un poco de margen por si el ultimo dia todavia no esta registrado en el csv
-# date0 = date0 - un_dia_menos
-# catroce_dias = timedelta(days=14)
-# contagios_catorce_dias = dfinfo['num_casos'].loc[date0-catroce_dias:date0].sum()
-# incidencia_acumulada = contagios_catorce_dias/(47332614/100000)
-
+    incidencia_vector.append(contagios_catorce_dias/(poblacion_prov[provincia]/100000))
 
 # ------------------------------------------------------------------------------
 # App layout
@@ -466,8 +459,10 @@ def update_graph(slct_prov, slct_tipo):
         dff, y=slct_tipo, title=titulo_grafica
     )
 
+    etiquetas = list(provincia_incidencia.keys())
+
     fig2 = go.Figure(
-        data=[go.Pie(labels=['Confirmados','Curados','Activos', 'Fallecidos'], values=data_pie)]
+        [go.Bar(x = etiquetas, y = incidencia_vector)]
 	)
 
     
