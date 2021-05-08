@@ -31,6 +31,10 @@ provincia_incidencia = {'A':[],'AB':[],'AL':[],'AV':[],'B':[],'BA':[],'BI':[],'B
 
 incidencia_vector = []
 
+colors = {
+'background': '#E2E8F5',
+}
+
 poblacion_prov = {'A':1879888,
 'AB':388270,
 'AL':727945,
@@ -167,13 +171,21 @@ for provincia in provincia_abrev:
 
 # ------------------------------------------------------------------------------
 # App layout
-app.layout = html.Div(children=[
+app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
 
-    html.H1("Análisis de la situacion actual del Covid-19 en España", style={'text-align': 'center', 'color':'gray'}, ),
+    html.H1("Análisis de la situación actual de la Covid-19 en España", style={'text-align': 'center', 'color':'gray'}, ),
+
+    html.Header(
+        children = "Pagina web destinada a la monitorización de la Covid-19 en España",
+        style = {
+        "textAlign": "center",
+        "color": "gray",
+        "fontSize": 25,
+        "margin-top": "+18px"
+        }
+    ),
 
     html.Br(),
-
-    dcc.Graph(id='incidencia_españa', figure={}),
 
     html.Div(
 			children = [
@@ -329,6 +341,10 @@ app.layout = html.Div(children=[
 			className = "row flex-display"
 		),
 
+    dcc.Graph(id='incidencia_españa', figure={}),
+
+    html.Br(),
+
 #TO-DO Hay que comprobar que esten todas las provincias y bien puestas
     dcc.Dropdown(id="slct_prov",
                  options=[
@@ -403,113 +419,114 @@ app.layout = html.Div(children=[
     html.Div(id='output_container', children=[]),
     html.Br(),
 
-	html.Div(children=[
-		html.Div(children = [
-			dcc.Graph(id='mapa_linea', figure={})
-		], 	style = {'width':'50%','display':'inline-block', 'margin-top':'-100px'}
-        ),
-        html.Div(children = [
-            html.H5(
-                children = 'Hoy en la provincia seleccionada:',
-                style = {
-					"textAlign":"center",
-					"color":"gray",
-					"fontSize":30
-				}
-            ),
+	
+    html.Div(children = [
+        dcc.Graph(id='mapa_linea', figure={})
+    ]
+    ),
+    html.Div(children = [
+        html.Div( children = [
             html.H6(
-				children = "Incidencia acumulada",
-				style = {
-					"textAlign":"center",
-					"color":"gray",
-					"fontSize":30
-				}
-			),
-			html.P(id = 'incidencia',
-				children = {},
-				style = {
-					"textAlign":"center",
-					"color":"red",
-					"fontSize":20
-				}
-			),
+                children = "Incidencia acumulada",
+                style = {
+                    "textAlign":"center",
+                    "color":"gray",
+                    "fontSize":30
+                }
+            ),
+            html.P(id = "incidencia",
+                children = {},
+                style = {
+                    "textAlign":"center",
+                    "color":"red",
+                    "fontSize":20
+                }
+            )], style = {'width':'20%','display':'inline-block'}
+        ),
+        html.Div( children = [
             html.H6(
                 children = "Nuevos casos diagnosticados",
                 style = {
-					"textAlign":"center",
-					"color":"gray",
-					"fontSize":30
-				}
+                    "textAlign":"center",
+                    "color":"gray",
+                    "fontSize":30
+                }
             ),
             html.P(
                 id = 'nuevos_casos_provincia',
                 children = {},
                 style = {
-					"textAlign":"center",
-					"color":"red",
-					"fontSize":20
-				}
-            ),
+                    "textAlign":"center",
+                    "color":"red",
+                    "fontSize":20
+                }
+            ) ], style = {'width':'20%','display':'inline-block'}
+        ),
+        html.Div( children = [
             html.H6(
                 children = "Nuevos casos en UCI",
                 style = {
-					"textAlign":"center",
-					"color":"gray",
-					"fontSize":30
-				}
+                    "textAlign":"center",
+                    "color":"gray",
+                    "fontSize":30
+                }
             ),
             html.P(
                 id = 'nuevos_uci_provincia',
                 children = {},
                 style = {
-					"textAlign":"center",
-					"color":"red",
-					"fontSize":20
-				}
-            ),
+                    "textAlign":"center",
+                    "color":"red",
+                    "fontSize":20
+                }
+            )], style = {'width':'20%','display':'inline-block'}
+        ),
+        html.Div( children = [
             html.H6(
                 children = 'Nuevos fallecidos',
                 style = {
-					"textAlign":"center",
-					"color":"gray",
-					"fontSize":30
-				}
+                    "textAlign":"center",
+                    "color":"gray",
+                    "fontSize":30
+                }
             ),
             html.P(
                 id = 'nuevos_fallecidos_provincia',
                 children = {},
                 style = {
-					"textAlign":"center",
-					"color":"red",
-					"fontSize":20
-				}
-            ),
+                    "textAlign":"center",
+                    "color":"red",
+                    "fontSize":20
+                }
+            )], style = {'width':'20%','display':'inline-block'}
+        ),
+        html.Div( children = [
             html.H6(
                 children = 'Nuevos casos hospitalizados',
                 style = {
-					"textAlign":"center",
-					"color":"gray",
-					"fontSize":30
-				} 
+                    "textAlign":"center",
+                    "color":"gray",
+                    "fontSize":30
+                } 
             ),
             html.P(
                 id = 'nuevos_hosp_provincia',
                 children = {},
                 style = {
-					"textAlign":"center",
-					"color":"red",
-					"fontSize":20
-				}
-            ), 
-        ], style = {'width':'25%','display':'inline-block'})
-	],
-	className='card_container three columns'
-	),
-] )
+                    "textAlign":"center",
+                    "color":"red",
+                    "fontSize":20
+                }
+            ),
+        ], style = {'width':'20%','display':'inline-block'})
+    ], )
+
+])
+
 
 
 # ------------------------------------------------------------------------------
-# Connect the Plotly graphs with Dash Components
+# Connect the Plotly graphs wirth Dash Components
 @app.callback(
     [Output(component_id='output_container', component_property='children'),
      Output(component_id='mapa_linea', component_property='figure'),
@@ -528,7 +545,7 @@ def update_graph(slct_prov, slct_tipo):
 
     container = " " #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
-    incidencia_acumulada = provincia_incidencia[slct_prov]
+    incidencia_acumulada = (provincia_incidencia[slct_prov])
 
     titulo_grafica = "{}".format(titulo[slct_tipo])
 
