@@ -173,13 +173,13 @@ for provincia in provincia_abrev:
 # App layout
 app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
 
-    html.H1("Análisis de la situación actual de la Covid-19 en España", style={'text-align': 'center', 'color':'gray'}, ),
+    html.H1("Análisis de la situación actual de la Covid-19 en España", style={'text-align': 'center', 'color':'black','font-family': 'Arial'}),
 
     html.Header(
-        children = "Pagina web destinada a la monitorización de la Covid-19 en España",
+        children = "Esta página web pretende mostrar la monitorización de la Covid-19 en España y en cada una de sus provincias",
         style = {
         "textAlign": "center",
-        "color": "gray",
+        "color": "black",
         "fontSize": 25,
         "margin-top": "+18px"
         }
@@ -346,60 +346,62 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
     html.Br(),
 
 #TO-DO Hay que comprobar que esten todas las provincias y bien puestas
+    html.Div(
+        children =[
     dcc.Dropdown(id="slct_prov",
                  options=[
-                     {"label": "Alicante", "value": 'A'},
+                     {"label": "Álava", "value": 'VI'},
                      {"label": "Albacete", "value": 'AB'},
+                     {"label": "Alicante", "value": 'A'},
                      {"label": "Almería", "value": 'AL'},
+                     {"label": "Asturias", "value": 'O'},
                      {"label": "Ávila", "value": 'AV'},
-                     {"label": "Barcelona", "value": 'B'},
                      {"label": "Badajoz", "value": 'BA'},
-                     {"label": "Vizcaya", "value": 'BI'},
+                     {"label": "Baleares", "value": 'PM'},
+                     {"label": "Barcelona", "value": 'B'},           
                      {"label": "Burgos", "value": 'BU'},
-                     {"label": "La Coruña", "value": 'C'},
-                     {"label": "Cádiz", "value": 'CA'},
                      {"label": "Cáceres", "value": 'CC'},
-                     {"label": "Ceuta", "value": 'CE'},
-                     {"label": "Córdoba", "value": 'CO'},
-                     {"label": "Ciudad Real", "value": 'CR'},
+                     {"label": "Cádiz", "value": 'CA'},
+                     {"label": "Cantabria", "value": 'S'},
                      {"label": "Castellón", "value": 'CS'},
+                     {"label": "Ceuta", "value": 'CE'},
+                     {"label": "Ciudad Real", "value": 'CR'},
+                     {"label": "Córdoba", "value": 'CO'},
                      {"label": "Cuenca", "value": 'CU'},
-                     {"label": "Gran Canaria", "value": 'GC'},
+                     {"label": "Guipúzcoa", "value": 'SS'},
                      {"label": "Girona", "value": 'GI'},
                      {"label": "Granada", "value": 'GR'},
+                     {"label": "Gran Canaria", "value": 'GC'},
                      {"label": "Guadalajara", "value": 'GU'},
                      {"label": "Huelva", "value": 'H'},
                      {"label": "Huesca", "value": 'HU'},
                      {"label": "Jaén", "value": 'J'},
-                     {"label": "Lleida", "value": 'L'},
-                     {"label": "León", "value": 'LE'},
+                     {"label": "La Coruña", "value": 'C'},
                      {"label": "La Rioja", "value": 'LO'},
+                     {"label": "León", "value": 'LE'},
+                     {"label": "Lleida", "value": 'L'},
                      {"label": "Lugo", "value": 'LU'},
                      {"label": "Madrid", "value": 'M'},
                      {"label": "Málaga", "value": 'MA'},
                      {"label": "Melilla", "value": 'ML'},
                      {"label": "Murcia", "value": 'MU'},
                      {"label": "Navarra", "value": 'NA'},
-                     {"label": "Asturias", "value": 'O'},
                      {"label": "Orense", "value": 'OR'},
                      {"label": "Palencia", "value": 'P'},
-                     {"label": "Islas Baleares", "value": 'PM'},
                      {"label": "Pontevedra", "value": 'PO'},
-                     {"label": "Cantabria", "value": 'S'},
                      {"label": "Salamanca", "value": 'SA'},
-                     {"label": "Sevilla", "value": 'SE'},
                      {"label": "Segovia", "value": 'SG'},
+                     {"label": "Sevilla", "value": 'SE'},
                      {"label": "Soria", "value": 'SO'},
-                     {"label": "Guipúzcoa", "value": 'SS'},
                      {"label": "Tarragona", "value": 'T'},
-                     {"label": "Teruel", "value": 'TE'},
                      {"label": "Tenerife", "value": 'TF'},
+                     {"label": "Teruel", "value": 'TE'},
                      {"label": "Toledo", "value": 'TO'},
                      {"label": "Valencia", "value": 'V'},
                      {"label": "Valladolid", "value": 'VA'},
-                     {"label": "Vizcaya", "value": 'VI'},
-                     {"label": "Zaragoza", "value": 'Z'},
-                     {"label": "Zamora", "value": 'ZA'}],
+                     {"label": "Vizcaya", "value": 'BI'},
+                     {"label": "Zamora", "value": 'ZA'},
+                     {"label": "Zaragoza", "value": 'Z'}],
                  multi=False,
                  value='A',
                  style={'width': "50%"}
@@ -415,6 +417,9 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
                  value='num_casos',
                  style={'width': "50%"}
                  ),
+        ],
+        style={'display':'flex','align-items':'center','justify-content':'center'}
+    ),
 
     html.Div(id='output_container', children=[]),
     html.Br(),
@@ -426,7 +431,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
     ),
     html.Div(children = [
         html.Div( children = [
-            html.H6(
+            html.P(
                 children = "Incidencia acumulada",
                 style = {
                     "textAlign":"center",
@@ -444,7 +449,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             )], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.H6(
+            html.P(
                 children = "Nuevos casos diagnosticados",
                 style = {
                     "textAlign":"center",
@@ -463,7 +468,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             ) ], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.H6(
+            html.P(
                 children = "Nuevos casos en UCI",
                 style = {
                     "textAlign":"center",
@@ -482,7 +487,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             )], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.H6(
+            html.P(
                 children = 'Nuevos fallecidos',
                 style = {
                     "textAlign":"center",
@@ -501,7 +506,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             )], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.H6(
+            html.P(
                 children = 'Nuevos casos hospitalizados',
                 style = {
                     "textAlign":"center",
@@ -566,8 +571,10 @@ def update_graph(slct_prov, slct_tipo):
 
     fig2 = go.Figure(
         [go.Bar(x = etiquetas, y = incidencia_vector)]
+        
 	)
 
+    fig2.update_layout(title = 'Incidencia acumulada en España los últimos 14 días')
     
     return container, fig, incidencia_acumulada, fig2, nuevos_casos, nuevos_uci, nuevos_hopsitalizados, nuevos_defunciones
 
