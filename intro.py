@@ -545,7 +545,7 @@ def update_graph(slct_prov, slct_tipo):
 
     container = " " #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
-    incidencia_acumulada = (provincia_incidencia[slct_prov])
+    incidencia_acumulada = round(provincia_incidencia[slct_prov][0])
 
     titulo_grafica = "{}".format(titulo[slct_tipo])
 
