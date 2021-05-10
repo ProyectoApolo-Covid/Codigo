@@ -11,6 +11,7 @@ from dash.dependencies import Input, Output
 from datetime import datetime, timedelta
 from plotly.graph_objs import *
 
+#Instanciamos variables necesarias para la descarga del CSV
 URL_ISCIII = 'https://cnecovid.isciii.es/covid19/resources/casos_hosp_uci_def_sexo_edad_provres.csv'
 BASE_DIR = Path()
 CACHE_DIR = BASE_DIR / 'cache'
@@ -25,16 +26,18 @@ PROV_ISO_COL = 'provincia_iso'
 
 EVOLUTION_PLOTS_DIR = BASE_DIR / 'evolutions'
 
+#Abreviaciones de las provincias
 provincia_abrev = ['A','AB','AL','AV','B','BA','BI','BU','C','CA','CC','CE','CO','CR','CS','CU','GC','GI','GR','GU','H','HU','J','L','LE','LO','LU','M','MA','ML','MU','NA','O','OR','P','PM','PO','S','SA','SE','SG','SO','SS','T','TE','TF','TO','V','VA','VI','Z','ZA']
-
+#En este diccionario se guardará la incidencia acumulada asociada a cada provincia
 provincia_incidencia = {'A':[],'AB':[],'AL':[],'AV':[],'B':[],'BA':[],'BI':[],'BU':[],'C':[],'CA':[],'CC':[],'CE':[],'CO':[],'CR':[],'CS':[],'CU':[],'GC':[],'GI':[],'GR':[],'GU':[],'H':[],'HU':[],'J':[],'L':[],'LE':[],'LO':[],'LU':[],'M':[],'MA':[],'ML':[],'MU':[],'NA':[],'O':[],'OR':[],'P':[],'PM':[],'PO':[],'S':[],'SA':[],'SE':[],'SG':[],'SO':[],'SS':[],'T':[],'TE':[],'TF':[],'TO':[],'V':[],'VA':[],'VI':[],'Z':[],'ZA':[]}
-
+#Lo mismo pero en una tupla en lugar de un diccionario
 incidencia_vector = []
 
 colors = {
 'background': '#E2E8F5',
 }
 
+#Población de cada provincia, extraído del INE
 poblacion_prov = {'A':1879888,
 'AB':388270,
 'AL':727945,
@@ -88,6 +91,7 @@ poblacion_prov = {'A':1879888,
 'Z':972528,
 'ZA':170588}
 
+#Función que descarga el fichero CSV y devuelve la ruta
 def download_iscii_data():
     fname = URL_ISCIII.split('/')[-1]
     now = datetime.now()
@@ -109,7 +113,7 @@ def download_iscii_data():
     
     return path
 
-
+#Función que devuelve el dataframe a partir de la ruta del CSV
 def get_dframe(date_range=None):
     
     path = download_iscii_data()
@@ -124,7 +128,7 @@ def get_dframe(date_range=None):
     
     return dframe
 
-
+#Inicializmaos la app de Dash
 app = dash.Dash(__name__,meta_tags = [{"name": "viewport", "content": "width=device-width"}])
 
 #Leemos el csv con los datos (luego cambiare a que descargue automáticamente el más nuevo)
@@ -158,7 +162,7 @@ num_def_totales = dfinfo['num_def'].sum() #Muertes totales
 num_casos_curados = num_casos_totales - info_actual['activos']
 
 
-
+#Calculamos la incidencia acumulada para cada provincia
 for provincia in provincia_abrev:
     dff = df.copy()
     dff = dff[dff["provincia_iso"] == provincia]
@@ -170,11 +174,13 @@ for provincia in provincia_abrev:
     incidencia_vector.append(contagios_catorce_dias/(poblacion_prov[provincia]/100000))
 
 # ------------------------------------------------------------------------------
-# App layout
+# Extructura de la aplicación
 app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
 
+    #Título de la página
     html.H1("Análisis de la situación actual de la Covid-19 en España", style={'text-align': 'center', 'color':'black','font-family': 'Arial'}),
 
+    #Header
     html.Header(
         children = "Esta página web pretende mostrar la monitorización de la Covid-19 en España y en cada una de sus provincias",
         style = {
@@ -185,8 +191,10 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
         }
     ),
 
+    #Dejamos un espacio
     html.Br(),
 
+    #Estructura de los datos principales de España
     html.Div(
 			children = [
 				# (Columna 1): Contagios totales
@@ -341,11 +349,13 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
 			className = "row flex-display"
 		),
 
+    #Gráfica con la incidencia en España
     dcc.Graph(id='incidencia_españa', figure={}),
 
+    #Espacio
     html.Br(),
 
-#TO-DO Hay que comprobar que esten todas las provincias y bien puestas
+    #Lista para seleccionar la provincia
     html.Div(
         children =[
     dcc.Dropdown(id="slct_prov",
@@ -403,10 +413,11 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
                      {"label": "Zamora", "value": 'ZA'},
                      {"label": "Zaragoza", "value": 'Z'}],
                  multi=False,
-                 value='A',
+                 value='A', #Por defecto esta seleccionada Alicante
                  style={'width': "50%"}
                  ),
     
+    #Lista para la selección del tipo de gráfica que se quiere mostrar
     dcc.Dropdown(id="slct_tipo",
                  options=[
                      {"label": "Número de casos totales", "value": 'num_casos'},
@@ -426,12 +437,12 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
 
 	
     html.Div(children = [
-        dcc.Graph(id='mapa_linea', figure={})
+        dcc.Graph(id='mapa_linea', figure={}) #Gráfico de la provincia
     ]
-    ),
+    ), #Estructura de los datos de la provincia seleccionada
     html.Div(children = [
         html.Div( children = [
-            html.P(
+            html.P( #Incidencia acumulada
                 children = "Incidencia acumulada",
                 style = {
                     "textAlign":"center",
@@ -449,7 +460,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             )], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.P(
+            html.P( #Nuevos casos
                 children = "Nuevos casos diagnosticados",
                 style = {
                     "textAlign":"center",
@@ -468,7 +479,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             ) ], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.P(
+            html.P(#Nuevos casos en UCI
                 children = "Nuevos casos en UCI",
                 style = {
                     "textAlign":"center",
@@ -487,7 +498,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             )], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.P(
+            html.P( #Nuevos fallecidos
                 children = 'Nuevos fallecidos',
                 style = {
                     "textAlign":"center",
@@ -506,7 +517,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
             )], style = {'width':'20%','display':'inline-block'}
         ),
         html.Div( children = [
-            html.P(
+            html.P( #Nuevos casos hospitalizados
                 children = 'Nuevos casos hospitalizados',
                 style = {
                     "textAlign":"center",
@@ -523,7 +534,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
                     "fontSize":20
                 }
             ),
-        ], style = {'width':'20%','display':'inline-block'})
+        ], style = {'width':'20%','display':'inline-block'}) #Lo ponemos inline-block para que estén todos en horizontal
     ], )
 
 ])
@@ -531,7 +542,8 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
 
 
 # ------------------------------------------------------------------------------
-# Connect the Plotly graphs wirth Dash Components
+# Conectamos los componentes de Dash istanciados anteriormente con las salidas de la función de actualización
+# La app.callback lista todas las entradas y salidas, asociando las salidas a cada elemento de Dash
 @app.callback(
     [Output(component_id='output_container', component_property='children'),
      Output(component_id='mapa_linea', component_property='figure'),
@@ -545,37 +557,46 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
     Input(component_id='slct_tipo', component_property="value")]
 )
 def update_graph(slct_prov, slct_tipo):
-    print(slct_prov)
+    # slct_prov: provincia que ha seleccionado el ususario
+    # slct_tipo: tipo de gráfico que ha seleccionado el usuario
+    print(slct_prov) # Imprime en el terminal la provincia que ha seleccionado el usuario (debugging)
     print(type(slct_prov))
 
     container = " " #He intentado quitar el output container pero da error, dejo un string vacío para que no se vea por pantalla
 
-    incidencia_acumulada = round(provincia_incidencia[slct_prov][0])
+    incidencia_acumulada = round(provincia_incidencia[slct_prov][0]) # Seleccionamos la incidencia acumulada y la redondeamos para que no sean muchos decimales
 
-    titulo_grafica = "{}".format(titulo[slct_tipo])
+    titulo_grafica = "{}".format(titulo[slct_tipo])  # Cambiamos el título de la gráfica dependiendo del tipo de gráfica que eliga el usuario
 
+    #Hacemos una copia del dataframe para modificar la copia
     dff = df.copy()
-    dff = dff[dff['provincia_iso']==slct_prov]
-    dff = dff.groupby('fecha').sum()
+    dff = dff[dff['provincia_iso']==slct_prov] # Seleccionamos la provincia
+    dff = dff.groupby('fecha').sum() # Agrupamos por fecha y sumamos los valores
+    # Para coger los nuevos casos cogemos el último valor del data frame
     nuevos_casos = dff['num_casos'].iloc[-1]
     nuevos_uci = dff['num_uci'].iloc[-1]
     nuevos_hopsitalizados = dff['num_hosp'].iloc[-1]
     nuevos_defunciones = dff['num_def'].iloc[-1]
 
-    # Plotly Express
+    # Creación de las figuras
+    # fig: gráfico de línea para la provincia seleccionada
     fig = px.line(
         dff, y=slct_tipo, title=titulo_grafica
     )
 
+    #Creamos las etiquetas para la figura 2
     etiquetas = list(provincia_incidencia.keys())
 
+    # fig2: gráfico de barras de la incidencia acumulada
     fig2 = go.Figure(
         [go.Bar(x = etiquetas, y = incidencia_vector)]
         
 	)
 
+    # Modificamos el título de la figura 2
     fig2.update_layout(title = 'Incidencia acumulada en España los últimos 14 días')
     
+    # Se devuelven las salidas en el mismo orden que se han instanciado al principio de la función
     return container, fig, incidencia_acumulada, fig2, nuevos_casos, nuevos_uci, nuevos_hopsitalizados, nuevos_defunciones
 
 
